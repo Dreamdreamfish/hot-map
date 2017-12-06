@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style type="text/css">
+		#heatmap {
+			background-image: url("image/map.jpg");
+		}
+	</style>
+</head>
+<body>
+	<h2>Heatmap</h2>
+	<canvas id="heatmap" class="clear" style="border: 1px solid;" width="500px" height="499px"></canvas>
+	<button id="resetButton">Reset</button>
+</body>
+    <script>
+    	var points = {};
+    	var SCALE = 3;
+    	var x = -1;
+    	var y = -1;
+    	function loadDemo() {
+    		document.getElementById("resetButton").onclick = reset; //点击reset按钮的时候，将整个canvas区域清空并重置回原始状态
+
+    		canvas = document.getElementById("heatmap");
+    		context = canvas.getContext('2d');
+    		context.globalAlpha = 0.2; //给canvas设置一个高透明值
+    		context.globalCompositeOperation = "lighter"; //给canvas设置为混合模式，让新的绘制操作点亮底层的像素而不是替换他们
+            
+            function sample() {
+            	if(x != -1) {
+            		addToPoint(x, y);
+            	}
+            	setTimeout(sample, 100); //设置定时器，每隔1/10秒的时间调用sample函数
+            }
+            //鼠标移动时，每隔1/10秒的时间调用sample函数
+            canvas.onmousemove = function(e) {
+            	x = e.clientX - e.target.offsetLeft; //获取鼠标所在点的x坐标值
+            	y = e.clientY - e.target.offsetTop; //获取鼠标所在点的y坐标值
+            	addToPoint(x, y);
+            }
+
+            sample(); 
+    	}
+    	//重置函数
+    	function reset() {
+    		points = {};
+    		context.clearRect(0, 0, 500, 499);
+            x = -1;
+            y = -1;
+    	}
+    	//颜色查找，不同的颜色值被用来代表各种不同的热度，intensity的值越大，返回的颜色越亮
+    	function getColor(intensity) {
+    		var colors = ["#072933", "#2E4045", "#8C593B","B2814E", "#FAC268", "#FAD237"]; //颜色亮度由低到高
+    		return colors[Math.floor(intensity/2)];
+    	}
+    	function drawPoint(x, y, radius) {
+    		context.fillStyle = getColor(radius);
+    		radius = Math.sqrt(radius)*6;
+
+    		context.beginPath();
+    		context.arc(x, y, radius, 0, Math.PI*2, true);
+
+    		context.closePath();
+    		context.fill();
+    	}
+    	function addToPoint(x, y) {
+    		//将x,y取整
+    		x = Math.floor(x/SCALE);
+    		y = Math.floor(y/SCALE);
+            //限制绘制的圆点的半径为大于等于1，小于等于10的整数
+    		if (!points[[x, y]]) {
+    			points[[x, y]] = 1; //设置初始值为1
+    		} else if (points[[x, y]] == 10) {
+    			return
+    		} else {
+    			points[[x, y]]++;
+    		}
+    		drawPoint(x*SCALE, y*SCALE, points[[x, y]]);
+    	}
+    	window.addEventListener("load", loadDemo, true);
+    </script>
+</html>
